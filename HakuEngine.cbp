@@ -46,10 +46,58 @@
 			<Add option="-std=c++11" />
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
+			<Add option="-std=c99" />
 			<Add option="-DSFML_DYNAMIC" />
 		</Compiler>
 		<Unit filename="DownloadResource.cpp" />
 		<Unit filename="DownloadResource.h" />
+		<Unit filename="gumbo-parser-master/src/attribute.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="gumbo-parser-master/src/attribute.h" />
+		<Unit filename="gumbo-parser-master/src/char_ref.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="gumbo-parser-master/src/char_ref.h" />
+		<Unit filename="gumbo-parser-master/src/error.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="gumbo-parser-master/src/error.h" />
+		<Unit filename="gumbo-parser-master/src/gumbo.h" />
+		<Unit filename="gumbo-parser-master/src/insertion_mode.h" />
+		<Unit filename="gumbo-parser-master/src/parser.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="gumbo-parser-master/src/parser.h" />
+		<Unit filename="gumbo-parser-master/src/string_buffer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="gumbo-parser-master/src/string_buffer.h" />
+		<Unit filename="gumbo-parser-master/src/string_piece.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="gumbo-parser-master/src/string_piece.h" />
+		<Unit filename="gumbo-parser-master/src/tag.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="gumbo-parser-master/src/token_type.h" />
+		<Unit filename="gumbo-parser-master/src/tokenizer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="gumbo-parser-master/src/tokenizer.h" />
+		<Unit filename="gumbo-parser-master/src/tokenizer_states.h" />
+		<Unit filename="gumbo-parser-master/src/utf8.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="gumbo-parser-master/src/utf8.h" />
+		<Unit filename="gumbo-parser-master/src/util.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="gumbo-parser-master/src/util.h" />
+		<Unit filename="gumbo-parser-master/src/vector.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="gumbo-parser-master/src/vector.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="tinyxml2/tinyxml.cpp" />
 		<Unit filename="tinyxml2/tinyxml2.h" />

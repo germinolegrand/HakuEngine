@@ -18,6 +18,18 @@ struct WebRessource
     ResourceData data;
 };
 
-WebRessource downloadFromURL(URL const& url);
+struct UnknownProtocol
+{
+    Protocol protocol;
+};
+
+struct ImpossibleAccess
+{
+    URI uri;
+    unsigned int error_code;
+};
+
+
+WebRessource downloadFromURL(URL const& url, unsigned int redirect_TTL = 3);
 
 #endif // DOWNLOADRESOURCE_H
