@@ -1,9 +1,10 @@
 #include <iostream>
 #include <system_error>
 #include "tinyxml2/tinyxml2.h"
-#include "gumbo-parser-master/src/gumbo.h"
 
 #include "DownloadResource.h"
+#include "AnalyseResource.h"
+#include "PersistResults.h"
 
 struct PageVisitor: public tinyxml2::XMLVisitor
 {
@@ -56,23 +57,6 @@ std::error_category& XMLError_category()
     return _cat;
 }
 
-void search_for_links(GumboNode* node)
-{
-    if(node->type != GUMBO_NODE_ELEMENT)
-        return;
-
-    GumboAttribute* href;
-    if(node->v.element.tag == GUMBO_TAG_A && (href = gumbo_get_attribute(&node->v.element.attributes, "href")))
-    {
-        std::cout << href->value << std::endl;
-    }
-
-    GumboVector* children = &node->v.element.children;
-    for(unsigned int i = 0; i < children->length; ++i)
-    {
-        search_for_links(static_cast<GumboNode*>(children->data[i]));
-    }
-}
 
 int main(int argc, char* argv[])
 {
@@ -84,15 +68,17 @@ int main(int argc, char* argv[])
 
     //WebRessource indexHaku = downloadFromURL("http://192.168.1.36/");
 
+    DatabaseSession dbsession;
+
     try
     {
         WebRessource indexHaku = downloadFromURL("http://www.glfw.org/");
 
         std::cout << indexHaku.data << std::endl;
 
-        GumboOutput* output = gumbo_parse(indexHaku.data.c_str());
-        search_for_links(output->root);
-        gumbo_destroy_output(&kGumboDefaultOptions, output);
+        AnalyseResults results = analyseResource(indexHaku);
+
+        dbsession.persist(results);
     }
     catch(ImpossibleAccess const& e)
     {
