@@ -5,8 +5,8 @@
 #include <pqxx/pqxx>
 #include <iostream>
 
-DatabaseSession::DatabaseSession():
-    m_connection("user=postgres password=toor")
+DatabaseSession::DatabaseSession(std::string const& connection_string):
+    m_connection(connection_string)
 {}
 
 void DatabaseSession::persist(ToBeCrawled const& cron, AnalyseResults const& analyse)

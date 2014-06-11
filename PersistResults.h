@@ -16,7 +16,7 @@ struct ToBeCrawled
 class DatabaseSession
 {
 public:
-    DatabaseSession();
+    DatabaseSession(std::string const& connection_string = "");
     DatabaseSession(DatabaseSession&&) = delete;
 
     void persist(ToBeCrawled const& cron, AnalyseResults const& analyse);

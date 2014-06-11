@@ -10,7 +10,7 @@ int main(int argc, char* argv[])
 {
     std::cout << "Hello Miyazaki's world!" << std::endl;
 
-    DatabaseSession dbsession;
+    DatabaseSession dbsession(argc > 2 ? argv[1] : "user=postgres");
 
     while(true)
     {
@@ -46,12 +46,12 @@ int main(int argc, char* argv[])
                 }
                 catch(UnknownProtocol const& e)
                 {
-                    std::cerr << "\n" << tobecrawled.url << "Unknown protocol " << e.protocol << std::endl;
+                    std::cerr << "\n" << tobecrawled.url << " : Unknown protocol " << e.protocol << std::endl;
                     dbsession.persist_error(tobecrawled.url);
                 }
                 catch(ImpossibleAccess const& e)
                 {
-                    std::cerr << "\n" << tobecrawled.url << "Can't access " << e.uri << " with error code " << e.error_code << std::endl;
+                    std::cerr << "\n" << tobecrawled.url << " : Can't access " << e.uri << " with error code " << e.error_code << std::endl;
                     dbsession.persist_error(tobecrawled.url);
                 }
             }

@@ -48,6 +48,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option parameters='&quot;user=postgres password=toor&quot;' />
 				<Compiler>
 					<Add option="-g" />
 					<Add directory="SFML/include" />
@@ -86,7 +87,7 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 			<Add option="-std=c99" />
-			<Add option="-DSFML_DYNAMIC" />
+			<Add option="-DSFML_STATIC" />
 		</Compiler>
 		<Unit filename="AnalyseResource.cpp" />
 		<Unit filename="AnalyseResource.h" />
