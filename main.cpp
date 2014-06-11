@@ -10,7 +10,7 @@ int main(int argc, char* argv[])
 {
     std::cout << "Hello Miyazaki's world!" << std::endl;
 
-    DatabaseSession dbsession(argc > 2 ? argv[1] : "user=postgres");
+    DatabaseSession dbsession(argc >= 2 ? argv[1] : "user=postgres");
 
     while(true)
     {
