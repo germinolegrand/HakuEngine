@@ -4,12 +4,13 @@
 #include "AnalyseResource.h"
 
 #include <chrono>
-#include <pqxx>
+#include <pqxx/pqxx>
 
 struct ToBeCrawled
 {
     URL url;
-    std::chrono::milliseconds between;
+    int crawl_interval;
+    int ttl;
 };
 
 class DatabaseSession
@@ -23,7 +24,6 @@ public:
     void persist_error(URL const& url);
 
     std::vector<ToBeCrawled> getCrontab();
-    void updateCrontab(std::vector<ToBeCrawled> const& crontab);
 
 private:
     pqxx::connection m_connection;

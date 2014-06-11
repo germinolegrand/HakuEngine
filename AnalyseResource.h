@@ -10,8 +10,9 @@ struct AnalyseResults
 {
     std::set<URL> links;
     std::unordered_map<std::string, unsigned int> words;
+    std::string full_text;
 };
 
-AnalyseResults analyseResource(WebRessource const& res);
+AnalyseResults analyseResource(WebRessource const& webres);
 
 #endif // ANALYSERESOURCE_H

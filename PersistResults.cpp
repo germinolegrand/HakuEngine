@@ -1,19 +1,9 @@
 #include "PersistResults.h"
 
-#include <pqxx>
+#include "utils.h"
+
+#include <pqxx/pqxx>
 #include <iostream>
-
-template<class iterator, class F>
-void foreach_append_separated(std::string& str, iterator first, iterator last, F&& f, std::string const& separator)
-{
-    for(auto it = first; it != last;)
-    {
-        str += f(*it);
-
-        if(++it != last)
-            str += separator;
-    }
-}
 
 DatabaseSession::DatabaseSession():
     m_connection("user=postgres password=toor")
@@ -27,14 +17,14 @@ void DatabaseSession::persist(ToBeCrawled const& cron, AnalyseResults const& ana
     "UPDATE crontab"
         " SET"
             " last_date=transaction_timestamp(),"
-            " crawl_interval=" + w.quote(cron.between.count()) + ","
+            " crawl_interval=" + w.quote(cron.crawl_interval) + ","
             " crawl_count=crawl_count + 1"
         " WHERE url=" + w.quote(cron.url)
     );
 
-    if(!analyse.links.empty())
+    if(cron.ttl != 1 && !analyse.links.empty())
     {
-        std::string query1 = "WITH new_values (url, crawl_interval) as ("
+        std::string query1 = "WITH new_values (url, crawl_interval, ttl) as ("
         " VALUES";
 
         foreach_append_separated(query1, analyse.links.begin(), analyse.links.end(),
@@ -42,41 +32,35 @@ void DatabaseSession::persist(ToBeCrawled const& cron, AnalyseResults const& ana
             return
             " ("
                 " " + w.quote(link) + ","
-                " " + pqxx::to_string(cron.between.count()) +
+                " " + pqxx::to_string(cron.crawl_interval) + ","
+                " " + pqxx::to_string(cron.ttl == 0 ? 0 : cron.ttl - 1) +
             " )";
         }, ",");
 
         query1 +=
-//        " ),"
-//        " upsert as"
-//        " ( "
-//            " update crontab m "
-//              " set crawl_interval = nv.crawl_interval"
-//            " FROM new_values nv"
-//            " WHERE m.url = nv.url"
-//            " RETURNING m.*"
+        " ),"
+        " upsert as"
+        " ( "
+            " update crontab m "
+              " set crawl_interval = nv.crawl_interval"
+            " FROM new_values nv"
+            " WHERE m.url = nv.url"
+            " RETURNING m.*"
         " )"
-        " INSERT INTO crontab (url, crawl_interval)"
-        " SELECT url, crawl_interval"
+        " INSERT INTO crontab (url, crawl_interval, ttl)"
+        " SELECT url, crawl_interval, ttl"
         " FROM new_values"
         " WHERE NOT EXISTS (SELECT 1"
-                          " FROM crontab up"
+                          " FROM upsert up"
                           " WHERE up.url = new_values.url)";
-
-
-    //    std::string query1 = "INSERT INTO crontab (url, crawl_interval) VALUES";
-    //
-    //    foreach_append_separated(query1, analyse.links.begin(), analyse.links.end(),
-    //    [&w, &cron](decltype(analyse.links)::value_type const& link){
-    //        return
-    //        " ("
-    //            " " + w.quote(link) + ","
-    //            " " + w.quote(cron.between.count()) +
-    //        " )";
-    //    }, ",");
 
         pqxx::result r1 = w.exec(query1);
     }
+
+    pqxx::result d = w.exec(
+    "DELETE FROM keywords"
+        " WHERE url=" + w.quote(cron.url)
+    );
 
     if(!analyse.words.empty())
     {
@@ -97,11 +81,11 @@ void DatabaseSession::persist(ToBeCrawled const& cron, AnalyseResults const& ana
 
     w.commit();
 
-    for(auto& link : analyse.links)
-        std::cout << link << std::endl;
-
-    for(auto& pair_word_nb : analyse.words)
-        std::cout << pair_word_nb.first << ":" << pair_word_nb.second << std::endl;
+//    for(auto& link : analyse.links)
+//        std::cout << link << std::endl;
+//
+//    for(auto& pair_word_nb : analyse.words)
+//        std::cout << pair_word_nb.first << ":" << pair_word_nb.second << std::endl;
 }
 
 void DatabaseSession::persist_redirected(URL const& old_url, ToBeCrawled const& cron, AnalyseResults const& analyse)
@@ -115,8 +99,13 @@ void DatabaseSession::persist_error(URL const& url)
 {
     pqxx::work w(m_connection);
 
-    pqxx::result d = w.exec(
+    pqxx::result d0 = w.exec(
     "DELETE FROM crontab"
+        " WHERE url=" + w.quote(url)
+    );
+
+    pqxx::result d1 = w.exec(
+    "DELETE FROM keywords"
         " WHERE url=" + w.quote(url)
     );
 
@@ -129,7 +118,7 @@ std::vector<ToBeCrawled> DatabaseSession::getCrontab()
 {
     pqxx::work w(m_connection);
     pqxx::result r = w.exec(
-    "SELECT url, last_date, crawl_interval"
+    "SELECT url, last_date, crawl_interval, ttl"
         " FROM crontab"
         " WHERE transaction_timestamp() > last_date + crawl_interval * interval '1 hour'"
     );
@@ -147,36 +136,13 @@ std::vector<ToBeCrawled> DatabaseSession::getCrontab()
     {
         ToBeCrawled tbc;
         tbc.url = row["url"].as<std::string>();
-        tbc.between = std::chrono::milliseconds(row["crawl_interval"].as<int>());
+        tbc.crawl_interval = row["crawl_interval"].as<int>();
+        tbc.ttl = row["ttl"].as<int>();
 
         tobecrawled.emplace_back(tbc);
 
-        std::cout << tbc.url << "\t" << tbc.between.count() << "\t" << row["last_date"] << std::endl;
+        //std::cout << tbc.url << "\t" << tbc.crawl_interval << "\t" << row["last_date"] << "\t" << row["ttl"] << std::endl;
     }
 
     return tobecrawled;
 }
-
-void DatabaseSession::updateCrontab(std::vector<ToBeCrawled> const& crontab)
-{
-    pqxx::work w(m_connection);
-
-    std::string query = "INSERT OR UPDATE INTO crontab (url, last_date, crawl_interval) VALUES ";
-
-    for(auto const& row : crontab)
-    {
-        query += "(";
-        query += w.quote(row.url);
-        query += ", ";
-        query += "now()";
-        query += ", ";
-        query += w.quote(row.between.count());
-        query += "),";
-    }
-
-    pqxx::result r = w.exec(query);
-
-    w.commit();
-}
-
-

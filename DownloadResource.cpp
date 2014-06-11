@@ -38,23 +38,6 @@ std::tuple<ContentType, ResourceData> download_HTTP(Host const& host, URI const&
     throw ImpossibleAccess{"http://" + host + uri, status};
 }
 
-Protocol protocol_of_url(URL const& url)
-{
-    return url.substr(0, url.find("://"));
-}
-
-Host host_of_url(URL const& url)
-{
-    unsigned int host_begin = url.find("://") + 3;
-    return url.substr(host_begin, url.find('/', host_begin));
-}
-
-URI uri_of_url(URL const& url)
-{
-    unsigned int uri_begin = url.find('/', url.find("://") + 3);
-    return uri_begin < url.size() ? url.substr(uri_begin) : "";
-}
-
 WebRessource downloadFromURL(URL const& url, unsigned int redirect_TTL)
 {
     if(redirect_TTL == 0)

@@ -1,13 +1,8 @@
 #ifndef DOWNLOADRESOURCE_H
 #define DOWNLOADRESOURCE_H
 
-#include <string>
+#include "Url.h"
 
-using URL = std::string;
-using Protocol = std::string;
-using Host = std::string;
-using Port = unsigned short;
-using URI = std::string;
 using ContentType = std::string;
 using ResourceData = std::string;
 

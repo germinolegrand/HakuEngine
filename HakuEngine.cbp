@@ -51,7 +51,7 @@
 				<Compiler>
 					<Add option="-g" />
 					<Add directory="SFML/include" />
-					<Add directory="/usr/include/pqxx" />
+					<Add directory="/usr/include" />
 				</Compiler>
 				<Linker>
 					<Add option="-lsfml-system" />
@@ -70,12 +70,13 @@
 				<Compiler>
 					<Add option="-O2" />
 					<Add directory="SFML/include" />
-					<Add directory="/usr/include/pqxx" />
+					<Add directory="/usr/include" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
 					<Add option="-lsfml-system" />
 					<Add option="-lsfml-network" />
+					<Add option="-lpqxx" />
 					<Add directory="SFML/lib" />
 				</Linker>
 			</Target>
@@ -93,6 +94,7 @@
 		<Unit filename="DownloadResource.h" />
 		<Unit filename="PersistResults.cpp" />
 		<Unit filename="PersistResults.h" />
+		<Unit filename="Url.h" />
 		<Unit filename="gumbo-parser-master/src/attribute.c">
 			<Option compilerVar="CC" />
 		</Unit>
