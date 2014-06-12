@@ -26,34 +26,36 @@ int main(int argc, char* argv[])
         {
             try
             {
-                try
-                {
-                    WebRessource webres = downloadFromURL(tobecrawled.url);
+                WebRessource webres = downloadFromURL(tobecrawled.url);
 
-                    AnalyseResults results = analyseResource(webres);
+                AnalyseResults results = analyseResource(webres);
 
-                    std::cout << results.full_text << std::endl;
+                std::cout << results.full_text << std::endl;
 
-                    if(tobecrawled.url == webres.url)
-                    {
-                        dbsession.persist(tobecrawled, results);
-                    }
-                    else
-                    {
-                        std::swap(webres.url, tobecrawled.url);
-                        dbsession.persist_redirected(webres.url, tobecrawled, results);
-                    }
-                }
-                catch(UnknownProtocol const& e)
+                if(tobecrawled.url == webres.url)
                 {
-                    std::cerr << "\n" << tobecrawled.url << " : Unknown protocol " << e.protocol << std::endl;
-                    dbsession.persist_error(tobecrawled.url);
+                    dbsession.persist(tobecrawled, results);
                 }
-                catch(ImpossibleAccess const& e)
+                else
                 {
-                    std::cerr << "\n" << tobecrawled.url << " : Can't access " << e.uri << " with error code " << e.error_code << std::endl;
-                    dbsession.persist_error(tobecrawled.url);
+                    std::swap(webres.url, tobecrawled.url);
+                    dbsession.persist_redirected(webres.url, tobecrawled, results);
                 }
+            }
+            catch(UnknownProtocol const& e)
+            {
+                std::cerr << "\n" << tobecrawled.url << " : Unknown protocol " << e.protocol << std::endl;
+                dbsession.persist_error(tobecrawled.url);
+            }
+            catch(ImpossibleAccess const& e)
+            {
+                std::cerr << "\n" << tobecrawled.url << " : Can't access " << e.uri << " with error code " << e.error_code << std::endl;
+                dbsession.persist_error(tobecrawled.url);
+            }
+            catch(UnknownContentType const& e)
+            {
+                std::cerr << "\n" << tobecrawled.url << " : Unknown content type " << e.content_type << std::endl;
+                dbsession.persist_error(tobecrawled.url);
             }
             catch(pqxx::sql_error const&e)
             {

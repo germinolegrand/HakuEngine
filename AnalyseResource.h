@@ -13,6 +13,11 @@ struct AnalyseResults
     std::string full_text;
 };
 
+struct UnknownContentType
+{
+    ContentType content_type;
+};
+
 AnalyseResults analyseResource(WebRessource const& webres);
 
 #endif // ANALYSERESOURCE_H

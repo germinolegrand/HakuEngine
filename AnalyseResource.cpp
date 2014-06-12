@@ -49,7 +49,6 @@ std::string link_to_full_url(URL const& url, std::string link)
 
 std::string normalize_word(std::string word)
 {
-    ///TODO trouver pourquoi ça bouffe la dernière lettre !
     if(word.size() >= 1 && std::string(",.").find(word[word.size() - 1]) != std::string::npos)
         word.resize(word.size() - 1);
 
@@ -157,7 +156,7 @@ void search_for_text(WebRessource const& webres, AnalyseResults& results, GumboN
     results.full_text.append(text);
 }
 
-void analyseNode(WebRessource const& webres, AnalyseResults& results, GumboNode* node)
+void analyse_node(WebRessource const& webres, AnalyseResults& results, GumboNode* node)
 {
     skip_script_tag(webres, results, node);
     skip_style_tag(webres, results, node);
@@ -173,13 +172,13 @@ void analyseNode(WebRessource const& webres, AnalyseResults& results, GumboNode*
     {
         try
         {
-            analyseNode(webres, results, static_cast<GumboNode*>(children->data[i]));
+            analyse_node(webres, results, static_cast<GumboNode*>(children->data[i]));
         }
         catch(SkipThisNode const&){}
     }
 }
 
-AnalyseResults analyseResource(WebRessource const& webres)
+AnalyseResults analyse_text_html(WebRessource const& webres)
 {
     AnalyseResults results;
 
@@ -189,7 +188,43 @@ AnalyseResults analyseResource(WebRessource const& webres)
         gumbo_destroy_output(&kGumboDefaultOptions, output);
     });
 
-    analyseNode(webres, results, output->root);
+    analyse_node(webres, results, output->root);
 
     return results;
+}
+
+AnalyseResults analyse_ftp_file(WebRessource const& webres)
+{
+    AnalyseResults results;
+
+    unsigned int score = 1;
+
+    URI uri = uri_of_url(webres.url);
+
+    for(auto it = begin(uri); it != end(uri);)
+    {
+        auto pair_beg_en = extract_between(it, end(uri), '/', '/');
+
+        ///Insert or add
+        {
+            auto pair_it_bool = results.words.emplace(std::string{pair_beg_en.first, pair_beg_en.second}, score);
+
+            if(!pair_it_bool.second)
+                pair_it_bool.first->second += score;
+        }
+
+        it = pair_beg_en.second;
+    }
+
+    return results;
+}
+
+AnalyseResults analyseResource(WebRessource const& webres)
+{
+    if(webres.content_type == "text/html")
+        return analyse_text_html(webres);
+    if(webres.content_type == "ftp/file")
+        return analyse_ftp_file(webres);
+
+    throw UnknownContentType{webres.content_type};
 }

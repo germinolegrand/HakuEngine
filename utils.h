@@ -1,6 +1,8 @@
 #ifndef UTILS
 #define UTILS
 
+#include <algorithm>
+
 inline namespace utils
 {
 
@@ -39,6 +41,58 @@ void foreach_append_separated(std::string& str, iterator first, iterator last, F
             str += separator;
     }
 }
+
+///Extract
+
+template<class iterator, class A, class B>
+std::pair<iterator, iterator> extract(iterator itBegin, iterator itEnd, A const& a, B const& b)
+{
+    itBegin = std::find(itBegin, itEnd, a);
+
+    iterator sub_itEnd = std::find(itBegin, itEnd, b);
+
+    if(sub_itEnd != itEnd)
+        ++sub_itEnd;
+
+    return {itBegin, sub_itEnd};
+}
+
+template<class iterator, class A, class B>
+std::pair<iterator, iterator> extract_if(iterator itBegin, iterator itEnd, A a, B b)
+{
+    itBegin = std::find_if(itBegin, itEnd, a);
+
+    iterator sub_itEnd = std::find_if(itBegin, itEnd, b);
+
+    if(sub_itEnd != itEnd)
+        ++sub_itEnd;
+
+    return {itBegin, sub_itEnd};
+}
+
+template<class iterator, class A, class B>
+std::pair<iterator, iterator> extract_between(iterator itBegin, iterator itEnd, A const& a, B const& b)
+{
+    itBegin = std::find(itBegin, itEnd, a);
+
+    if(itBegin != itEnd)
+        ++itBegin;
+
+    return {itBegin, std::find(itBegin, itEnd, b)};
+}
+
+template<class iterator, class A, class B>
+std::pair<iterator, iterator> extract_between_if(iterator itBegin, iterator itEnd, A a, B b)
+{
+    itBegin = std::find_if(itBegin, itEnd, a);
+
+    if(itBegin != itEnd)
+        ++itBegin;
+
+    return {itBegin, std::find_if(itBegin, itEnd, b)};
+}
+
+///implementations for std::isgraph (seems to be missing in libstdc++)
 
 inline bool isgraph(int c)
 {
