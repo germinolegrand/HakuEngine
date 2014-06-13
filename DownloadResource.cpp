@@ -29,7 +29,7 @@ std::tuple<ContentType, ResourceData> download_HTTP(Host const& host, URI const&
 
     if(status == sf::Http::Response::Ok)
     {
-        return std::make_tuple(response.getField("Content-Type"), response.getBody());
+        return std::make_tuple(response.getField("Content-Type").substr(0, response.getField("Content-Type").find(';')), response.getBody());
     }
     else if(status == sf::Http::Response::MovedTemporarily || status == sf::Http::Response::MovedPermanently)
     {
@@ -69,7 +69,7 @@ WebRessource downloadFromURL(URL const& url, unsigned int redirect_TTL)
     {
         sf::Ftp ftp;
 
-        auto res = ftp.connect(/*"ftp://" +*/ host_of_url(url));
+        auto res = ftp.connect(host_of_url(url));
         if(!res.isOk())
             throw ImpossibleAccess{url, res.getStatus()};
 
@@ -83,13 +83,6 @@ WebRessource downloadFromURL(URL const& url, unsigned int redirect_TTL)
 
         if(!listing_res.isOk())
             throw ImpossibleAccess{url, listing_res.getStatus()};
-
-        std::cout << listing_res.getMessage() << std::endl;
-
-        for(auto& entry : listing_res.getListing())
-            std::cout << entry << std::endl;
-
-        std::cout << "\n" << uri << std::endl;
 
         if(std::find(begin(listing_res.getListing()), end(listing_res.getListing()), uri) == end(listing_res.getListing()))
             throw ImpossibleAccess{url, 0};

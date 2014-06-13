@@ -57,7 +57,7 @@ void DatabaseSession::persist(ToBeCrawled const& cron, AnalyseResults const& ana
         pqxx::result r1 = w.exec(query1);
     }
 
-    pqxx::result d = w.exec(
+    pqxx::result d2 = w.exec(
     "DELETE FROM keywords"
         " WHERE url=" + w.quote(cron.url)
     );
@@ -77,6 +77,28 @@ void DatabaseSession::persist(ToBeCrawled const& cron, AnalyseResults const& ana
         }, ",");
 
         pqxx::result r2 = w.exec(query2);
+    }
+
+    pqxx::result d3 = w.exec(
+    "DELETE FROM backlinks"
+        " WHERE backlink_url=" + w.quote(cron.url)
+    );
+
+    if(!analyse.backlinks.empty())
+    {
+        std::string query3 = "INSERT INTO backlinks (keyword, url, backlink_url) VALUES";
+
+        foreach_append_separated(query3, analyse.backlinks.begin(), analyse.backlinks.end(),
+        [&w, &cron](decltype(analyse.backlinks)::value_type const& pair_word_url){
+            return
+            " ("
+                " " + w.quote(pair_word_url.first) + ","
+                " " + w.quote(pair_word_url.second) + ","
+                " " + w.quote(cron.url) +
+            " )";
+        }, ",");
+
+        pqxx::result r3 = w.exec(query3);
     }
 
     w.commit();

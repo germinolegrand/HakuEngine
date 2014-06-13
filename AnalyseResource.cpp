@@ -58,6 +58,46 @@ std::string normalize_word(std::string word)
     return word;
 }
 
+std::function<void(WebRessource const& webres, AnalyseResults& results, GumboNode* node)>
+generate_skip_tag(GumboTag tag)
+{
+    return [tag](WebRessource const& webres, AnalyseResults& results, GumboNode* node){
+        if(node->type == GUMBO_NODE_ELEMENT && node->v.element.tag == tag)
+            throw SkipThisNode{};
+    };
+}
+
+std::function<bool(WebRessource const& webres, AnalyseResults& results, GumboNode* node)>
+generate_is_inside_tag(GumboTag tag)
+{
+    GumboNode* strong_node = nullptr;
+    unsigned int strong_node_children_countdown = 0;
+
+    return [tag, strong_node, strong_node_children_countdown](WebRessource const& webres, AnalyseResults& results, GumboNode* node) mutable {
+        if(node->type == GUMBO_NODE_ELEMENT && node->v.element.tag == tag)
+        {
+            strong_node_children_countdown = node->v.element.children.length;
+
+            if(strong_node_children_countdown > 0)
+                strong_node = node;
+
+            return false;
+        }
+
+        bool ret = strong_node != nullptr;
+
+        if(strong_node && node->parent == strong_node)
+        {
+            --strong_node_children_countdown;
+
+            if(strong_node_children_countdown == 0)
+                strong_node = nullptr;
+        }
+
+        return ret;
+    };
+}
+
 void skip_style_tag(WebRessource const& webres, AnalyseResults& results, GumboNode* node)
 {
     if(node->type == GUMBO_NODE_ELEMENT && node->v.element.tag == GUMBO_TAG_STYLE)
@@ -219,12 +259,60 @@ AnalyseResults analyse_ftp_file(WebRessource const& webres)
     return results;
 }
 
-AnalyseResults analyseResource(WebRessource const& webres)
+AnalyseResults Analyzer::operator()(WebRessource const& webres)
 {
-    if(webres.content_type == "text/html")
-        return analyse_text_html(webres);
-    if(webres.content_type == "ftp/file")
-        return analyse_ftp_file(webres);
-
-    throw UnknownContentType{webres.content_type};
+    try
+    {
+        return m_analysers.at(webres.content_type)(webres);
+    }
+    catch(std::out_of_range const&)
+    {
+        throw UnknownContentType{webres.content_type};
+    }
 }
+
+void Analyzer::setAnalyser(ContentType const& content_type, std::function<AnalyseResults(WebRessource const&)> analyser)
+{
+    m_analysers[content_type] = std::move(analyser);
+}
+
+AnalyseResults TextHTMLAnalyser::operator()(WebRessource const& webres)
+{
+    AnalyseResults results;
+
+    GumboOutput* output = gumbo_parse(webres.data.c_str());
+
+    AT_SCOPE_EXIT([output]{
+        gumbo_destroy_output(&kGumboDefaultOptions, output);
+    });
+
+    analyse_node(webres, results, output->root);
+
+    return results;
+}
+
+void TextHTMLAnalyser::addAnalyser(HTMLAnalyser analyser)
+{
+    m_analysers.push_back(std::move(analyser));
+}
+
+void TextHTMLAnalyser::analyse_node(WebRessource const& webres, AnalyseResults& results, GumboNode* node)
+{
+    for(auto& analyser : m_analysers)
+        analyser(webres, results, node);
+
+    if(node->type != GUMBO_NODE_ELEMENT)
+        return;
+
+    GumboVector* children = &node->v.element.children;
+    for(unsigned int i = 0; i < children->length; ++i)
+    {
+        try
+        {
+            analyse_node(webres, results, static_cast<GumboNode*>(children->data[i]));
+        }
+        catch(SkipThisNode const&){}
+    }
+}
+
+

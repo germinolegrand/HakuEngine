@@ -12,6 +12,20 @@ int main(int argc, char* argv[])
 
     DatabaseSession dbsession(argc >= 2 ? argv[1] : "user=postgres");
 
+    Analyzer analyser;
+    analyser.setAnalyser("ftp/file", analyse_ftp_file);
+
+    TextHTMLAnalyser html_an;
+
+    html_an.addAnalyser(generate_skip_tag(GUMBO_TAG_STYLE));
+    html_an.addAnalyser(generate_skip_tag(GUMBO_TAG_SCRIPT));
+    html_an.addAnalyser(search_for_text);
+    html_an.addAnalyser(search_for_links);
+    html_an.addAnalyser(search_for_words);
+
+    analyser.setAnalyser("text/html", html_an);
+
+
     while(true)
     {
         std::vector<ToBeCrawled> crontab = dbsession.getCrontab();
@@ -28,7 +42,7 @@ int main(int argc, char* argv[])
             {
                 WebRessource webres = downloadFromURL(tobecrawled.url);
 
-                AnalyseResults results = analyseResource(webres);
+                AnalyseResults results = analyser(webres);
 
                 std::cout << results.full_text << std::endl;
 
