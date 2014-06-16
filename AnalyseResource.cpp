@@ -58,6 +58,40 @@ std::string normalize_word(std::string word)
     return word;
 }
 
+void search_for_img(WebRessource const& webres, AnalyseResults& results, GumboNode* node)
+{
+    if(node->type == GUMBO_NODE_ELEMENT && node->v.element.tag == GUMBO_TAG_IMG)
+    {
+        GumboAttribute* src;
+        GumboAttribute* alt;
+
+        if((src = gumbo_get_attribute(&node->v.element.attributes, "src"))
+           && (alt = gumbo_get_attribute(&node->v.element.attributes, "alt")))
+        {
+            URL url = link_to_full_url(webres.url, src->value);
+            results.links.insert(url);
+
+            std::string text(alt->value);
+
+            for(auto beg = begin(text),
+                      en = end(text),
+                      it = begin(text)
+                ; it != en ;)
+            {
+                beg = std::find_if(it, en, utils::isgraph);
+                it = std::find_if(beg, en, utils::isnotgraph);
+
+                try
+                {
+                    results.backlinks.emplace_back(normalize_word({beg, it}), url);
+                }
+                catch(SkipThisWord const& e)
+                {}
+            }
+        }
+    }
+}
+
 std::function<void(WebRessource const& webres, AnalyseResults& results, GumboNode* node)>
 generate_skip_tag(GumboTag tag)
 {
@@ -151,8 +185,8 @@ void search_for_words(WebRessource const& webres, AnalyseResults& results, Gumbo
               it = begin(text)
         ; it != en ;)
     {
-        beg = std::find_if(it, en, utils::isnotgraph);
-        it = std::find_if(beg, en, utils::isgraph);
+        beg = std::find_if(it, en, utils::isgraph);
+        it = std::find_if(beg, en, utils::isnotgraph);
 
         try
         {

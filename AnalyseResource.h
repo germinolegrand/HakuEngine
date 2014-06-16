@@ -13,7 +13,7 @@
 struct AnalyseResults
 {
     std::set<URL> links;
-    std::unordered_map<std::string, URL> backlinks;
+    std::vector<std::pair<std::string, URL>> backlinks;
     std::unordered_map<std::string, unsigned int> words;
     std::string full_text;
 };
@@ -62,6 +62,7 @@ std::function<bool(WebRessource const& webres, AnalyseResults& results, GumboNod
 generate_is_inside_tag(GumboTag tag);
 std::function<void(WebRessource const& webres, AnalyseResults& results, GumboNode* node)>
 generate_skip_tag(GumboTag tag);
+void search_for_img(WebRessource const& webres, AnalyseResults& results, GumboNode* node);
 
 AnalyseResults analyse_ftp_file(WebRessource const& webres);
 

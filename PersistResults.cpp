@@ -70,7 +70,7 @@ void DatabaseSession::persist(ToBeCrawled const& cron, AnalyseResults const& ana
         [&w, &cron](decltype(analyse.words)::value_type const& pair_word_nb){
             return
             " ("
-                " " + w.quote(pair_word_nb.first) + ","
+                " lower(" + w.quote(pair_word_nb.first) + "),"
                 " " + w.quote(pair_word_nb.second) + ","
                 " " + w.quote(cron.url) +
             " )";
@@ -92,7 +92,7 @@ void DatabaseSession::persist(ToBeCrawled const& cron, AnalyseResults const& ana
         [&w, &cron](decltype(analyse.backlinks)::value_type const& pair_word_url){
             return
             " ("
-                " " + w.quote(pair_word_url.first) + ","
+                " lower(" + w.quote(pair_word_url.first) + "),"
                 " " + w.quote(pair_word_url.second) + ","
                 " " + w.quote(cron.url) +
             " )";

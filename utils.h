@@ -92,11 +92,12 @@ std::pair<iterator, iterator> extract_between_if(iterator itBegin, iterator itEn
     return {itBegin, std::find_if(itBegin, itEnd, b)};
 }
 
+
 ///implementations for std::isgraph (seems to be missing in libstdc++)
 
 inline bool isgraph(int c)
 {
-    return (c >= 0 && c < 33) || c == 127;
+    return !(c >= 0 && c < 33) && c != 127;
 }
 
 inline bool isnotgraph(int c)

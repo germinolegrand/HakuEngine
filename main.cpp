@@ -8,7 +8,7 @@
 
 int main(int argc, char* argv[])
 {
-    std::cout << "Hello Miyazaki's world!" << std::endl;
+    std::clog << "Hello Miyazaki's world!" << std::endl;
 
     DatabaseSession dbsession(argc >= 2 ? argv[1] : "user=postgres");
 
@@ -22,9 +22,9 @@ int main(int argc, char* argv[])
     html_an.addAnalyser(search_for_text);
     html_an.addAnalyser(search_for_links);
     html_an.addAnalyser(search_for_words);
+    html_an.addAnalyser(search_for_img);
 
     analyser.setAnalyser("text/html", html_an);
-
 
     while(true)
     {
