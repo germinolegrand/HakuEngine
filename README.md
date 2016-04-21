@@ -1,6 +1,4 @@
 HakuEngine
 ==========
 
-A web crawler
-
-c'est de la balle
+A web crawler that works.
